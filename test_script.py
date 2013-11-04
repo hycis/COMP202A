@@ -92,7 +92,7 @@ def run_save(root, javafile):
     p2 = Popen(['java', javafile.rstrip('.java')], stdin=p1.stdout, stdout=subprocess.PIPE)
     p1.stdout.close()
     out, err = p2.communicate()
-    with open(output, 'a') as f:
+    with open(output, 'w') as f:
         if out is not None:
             f.write(out)
         if err is not None:
@@ -112,7 +112,7 @@ def runTest(testCases, folder):
                 except:
                     print sys.exc_info()[0]
                     
-                    with open(root+'err.txt', 'w') as err:
+                    with open(root+'/errors.txt', 'w') as err:
                         err.write(str(sys.exc_info()[0]))
 
 

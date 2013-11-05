@@ -79,7 +79,7 @@ def insert_test_cases(root, file, testCase):
 def run_save(root, javafile):
     
     '''
-    run and compile the temp files
+    run and compile the temp java files and save to output text files
     '''
     os.chdir(root)
     
@@ -103,13 +103,12 @@ def runTest(testCases, folder):
             
             if testCases.get(file) is not None:
                 try:
-                    print root
+                    print 'processing:', root
                     insert_test_cases(root, file, testCases[file])
                     run_save(root, file)
-                    print 'done!'
+                    print 'process done!'
                 except:
                     print sys.exc_info()[0]
-                    
                     with open(root+'/errors.txt', 'w') as err:
                         err.write(str(sys.exc_info()[0]))
 

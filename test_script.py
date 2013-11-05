@@ -87,10 +87,8 @@ def run_save(root, javafile):
     
     javapath = root + '/' + javafile
     output = javapath.rstrip('.java') + '.txt'
-    p1 = Popen(['javac', javafile], stdout=subprocess.PIPE)
-    time.sleep(2)
-    p2 = Popen(['java', javafile.rstrip('.java')], stdin=p1.stdout, stdout=subprocess.PIPE)
-    p1.stdout.close()
+    subprocess.check_call(['javac', javafile], stdout=subprocess.PIPE)
+    p2 = Popen(['java', javafile.rstrip('.java')], stdout=subprocess.PIPE)
     out, err = p2.communicate()
     with open(output, 'w') as f:
         if out is not None:

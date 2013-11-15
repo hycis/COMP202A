@@ -1,4 +1,3 @@
-
 # Created by : Zhenzhou Wu, zhenzhou.wu@mail.mcgill.ca
 
 # The script search through all the java files in the folder, 
@@ -151,7 +150,6 @@ if __name__ == "__main__":
     
     folder = '/Users/zhenzhou/Documents/COMP202A_Markings/Assignment_2/'
     
-    # The script search through all the java files in the folder, insert test cases into main method, and save the output from the run to text file. You can then look at the output result to compare with the standard answer.
     runTest(testCases, folder)
     
 

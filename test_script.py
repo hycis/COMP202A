@@ -31,46 +31,80 @@ def insert_test_cases(root, file, testCase):
     appearFirstTime = True
     continue_writing = True
     
+    have_main = False
     in_main = False
-
+    
+    tmpfile.write("import java.util.Arrays;")
+    
     for line in f:
-        
-        if 'class ' + just_name in line:
-            new_line = line.replace(just_name, just_name + 'tmp')
-            tmpfile.write(new_line)
-            
-        elif continue_writing:
-            tmpfile.write(line)
-            
+    
         if 'static void main' in line:
-            in_main = True
-            continue_writing = False
+            have_main = True
+            break
+    
+    f.seek(0)
+    if have_main:
+        for line in f:
+            if 'class ' + just_name in line:
+                new_line = line.replace(just_name, just_name + 'tmp')
+                tmpfile.write(new_line)
             
-            if '{' in line:
-                ls += [m.start() for m in re.finditer('{', line)]
-                appearFirstTime = False
-                
+            elif continue_writing:
+                tmpfile.write(line)
             
-        elif in_main:
-            if '{' in line:            
-                if appearFirstTime:
+            if 'static void main' in line:
+                in_main = True
+                continue_writing = False
+            
+                if '{' in line:
                     ls += [m.start() for m in re.finditer('{', line)]
-                    tmpfile.write('{' + '\n')
                     appearFirstTime = False
                 
-                else:
-                    ls += [m.start() for m in re.finditer('{', line)]
+            
+            elif in_main:
+                if '{' in line:            
+                    if appearFirstTime:
+                        ls += [m.start() for m in re.finditer('{', line)]
+                        tmpfile.write('{' + '\n')
+                        appearFirstTime = False
+                
+                    else:
+                        ls += [m.start() for m in re.finditer('{', line)]
                         
-            if '}' in line:
-                close_brace = [m.start() for m in re.finditer('}', line)]
-                for ele in close_brace:
-                    ls.pop()
+                if '}' in line:
+                    close_brace = [m.start() for m in re.finditer('}', line)]
+                    for ele in close_brace:
+                        ls.pop()
                     
             
-            if len(ls) == 0:
-                tmpfile.write(testCase + '\n' + '}' + '\n')
-                in_main = False
-                continue_writing = True
+                if len(ls) == 0:
+                    tmpfile.write(testCase + '\n' + '}' + '\n')
+                    in_main = False
+                    continue_writing = True 
+                    
+    else:
+    
+        for line in f:
+            if 'class ' + just_name in line:
+                new_line = line.replace(just_name, just_name + 'tmp')
+                tmpfile.write(new_line)
+                
+                if '{' in new_line:
+                    appearFirstTime = False
+                    tmpfile.write("public static void main(String[] args){" + '\n' + 
+                    testCase + '\n' + '}' + '\n')
+                                
+            elif '{' in line and appearFirstTime:
+                tmpfile.write(line)
+                appearFirstTime = False
+                tmpfile.write("public static void main(String[] args){" + '\n' + 
+                    testCase + '\n' + '}' + '\n')
+                            
+            else:
+                tmpfile.write(line)
+                    
+           
+    
     f.close()
     tmpfile.close()
                     
@@ -82,7 +116,7 @@ def run_save(root, javafile):
     '''
     os.chdir(root)
     
-    javafile = javafile.rstrip('.java') + 'tmp.java'
+#     javafile = javafile.rstrip('.java') + 'tmp.java'
     
     javapath = root + '/' + javafile
     output = javapath.rstrip('.java') + '.txt'
@@ -102,10 +136,13 @@ def runTest(testCases, folder):
             
             if testCases.get(file) is not None:
                 try:
-                    print 'processing:', root
-                    insert_test_cases(root, file, testCases[file])
-                    run_save(root, file)
-                    print 'process done!'
+                    print 'processing: ', file, ' == ', root.split('/')[-1]
+                    if testCases[file] is not "":
+                        insert_test_cases(root, file, testCases[file])
+                        run_save(root, file.rstrip('.java') + 'tmp.java')
+                    else:
+                        run_save(root, file)
+                    print 'process done!', file, ' == ', root.split('/')[-1]
                 except:
                     print sys.exc_info()[0]
                     with open(root+'/errors.txt', 'w') as err:
@@ -114,43 +151,59 @@ def runTest(testCases, folder):
 
 if __name__ == "__main__":
 
-    testCases = {'Question1.java': '''
-                 System.out.println("=TRUE=");  
-                 System.out.println("HIJ" + isConsecutive("HIJ"));  
-                 System.out.println("JIH" + isConsecutive("JIH"));  
-                 System.out.println("123" + isConsecutive("123"));  
-                 System.out.println("876" + isConsecutive("876"));  
-                 System.out.println("901" + isConsecutive("901"));  
-                 System.out.println("109" + isConsecutive("109"));  
-                 System.out.println("=FALSE=");  
-                 System.out.println("bcbc" + isConsecutive("bcbc"));  
-                 System.out.println("2323" + isConsecutive("2323"));
-                 ''',
-                'Question2.java': '''
-                System.out.println("==============");
-                System.out.println("DrawMeCircle(10, 5, 5)");
-                drawMeACircle(10, 5, 5);
-                System.out.println("DrawMeCircle(10, 10, 5)");
-                drawMeACircle(10, 10, 5);
-                System.out.println("DrawMeCircle(15, 5, 5)");
-                drawMeACircle(15, 5, 5);
-                System.out.println("DrawMeCircle(10, 10, 10)");
-                drawMeACircle(10, 10, 10);
-                ''',
-                'Question3.java': '''
-                System.out.println("==============");
-                System.out.println("DrawMeAnEllipse(10, 5, 5, 1)");
-                drawMeAnEllipse(10, 5, 5, 1);
-                System.out.println("DrawMeAnEllipse(10, 10, 5, 10)");
-                drawMeAnEllipse(10, 10, 5, 10);
-                System.out.println("DrawMeAnEllipse(15, 10, 10, 5)");
-                drawMeAnEllipse(15, 10, 10, 5);
-                '''
-                }
-    
-    folder = '/Users/zhenzhou/Documents/COMP202A_Markings/Assignment_2/'
-    
+    testCases = {'ArrayUtilities.java': '''
+                    int[] arr = {8, 35, 23, 53, 1, 3, 100, 432, 10, 0};
+                    int[] sorted = {0, 1, 3, 8, 35, 47, 54, 57, 89, 90};
+                    System.out.println("boolean linearSearch(int[] array, int target)");
+                    System.out.println("TRUE");
+                    System.out.println(linearSearch(arr, 0));
+                    System.out.println(linearSearch(arr, 432));
+                    System.out.println(linearSearch(arr, 53));
+                    System.out.println("FALSE");  
+                    System.out.println(linearSearch(arr, 2));
+                    System.out.println(linearSearch(arr, 500));
+                    System.out.println(linearSearch(arr, -1));
+
+                    System.out.println("boolean binarySearch(int[] array, int target)");
+                    System.out.println("TRUE");
+                    System.out.println(binarySearch(sorted, 0));
+                    System.out.println(binarySearch(sorted, 35));
+                    System.out.println(binarySearch(sorted, 90));
+                    System.out.println("FALSE");  
+                    System.out.println(binarySearch(sorted, 2));
+                    System.out.println(binarySearch(sorted, 500));
+                    System.out.println(binarySearch(sorted, -1));
+
+                    System.out.println("void sort(int[] array)");
+                    System.out.println("original array" + Arrays.toString(arr));
+                    sort(arr);
+                    System.out.println("sorted array" + Arrays.toString(arr));
+
+                    System.out.println("int[] copy(int[] array)");
+                    int [] copied = copy(arr);
+                    System.out.println("copied array" + Arrays.toString(copied));  
+
+
+
+                    System.out.println("int[] generateRandom(int 5)"); 
+                    System.out.println(Arrays.toString(generateRandom(5)));
+                    ''',
+                    'StopWatch.java':'''
+                    StopWatchtmp watch = new StopWatchtmp();
+                    watch.start();
+                    for (int i = 0; i < 100; i++)
+                    {
+                    System.out.println(i);
+                    }
+                    watch.stop();
+                    System.out.println("It took " + watch.getTimeNano() + " nanoseconds to complete that task");
+                    '''
+                    }
+                
+    folder = '/Users/Hycis/Documents/comp202/'
+  
     runTest(testCases, folder)
     
+
 
  

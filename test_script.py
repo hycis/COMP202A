@@ -33,9 +33,7 @@ def insert_test_cases(root, file, testCase):
     
     have_main = False
     in_main = False
-    
-    tmpfile.write("import java.util.Arrays;")
-    
+        
     for line in f:
     
         if 'static void main' in line:
@@ -43,14 +41,21 @@ def insert_test_cases(root, file, testCase):
             break
     
     f.seek(0)
+    
     if have_main:
         for line in f:
             if 'class ' + just_name in line:
                 new_line = line.replace(just_name, just_name + 'tmp')
                 tmpfile.write(new_line)
+                
+                
+            elif 'public ' + just_name in line or 'private ' + just_name in line: 
+                new_line = line.replace(just_name, just_name + 'tmp')
+                tmpfile.write(new_line)
             
             elif continue_writing:
                 tmpfile.write(line)
+                
             
             if 'static void main' in line:
                 in_main = True
@@ -99,7 +104,11 @@ def insert_test_cases(root, file, testCase):
                 appearFirstTime = False
                 tmpfile.write("public static void main(String[] args){" + '\n' + 
                     testCase + '\n' + '}' + '\n')
-                            
+              
+            elif 'public ' + just_name in line or 'private ' + just_name in line: 
+                new_line = line.replace(just_name, just_name + 'tmp')
+                tmpfile.write(new_line)
+                          
             else:
                 tmpfile.write(line)
                     
@@ -116,18 +125,18 @@ def run_save(root, javafile):
     '''
     os.chdir(root)
     
-#     javafile = javafile.rstrip('.java') + 'tmp.java'
-    
     javapath = root + '/' + javafile
-    output = javapath.rstrip('.java') + '.txt'
-    subprocess.check_call(['javac', javafile], stdout=subprocess.PIPE)
-    p2 = Popen(['java', javafile.rstrip('.java')], stdout=subprocess.PIPE)
-    out, err = p2.communicate()
+    output = javapath.rstrip('.java') + '_output.txt'
     with open(output, 'w') as f:
-        if out is not None:
-            f.write(out)
-        if err is not None:
-            f.write(err)
+    
+        subprocess.check_call(['javac', javafile], stdout=f, stderr=f)
+    
+        print "compiled successfully"
+
+        Popen(['java', javafile.rstrip('.java')], stdout=f, stderr=f)
+
+        print "run successfully"
+        
                     
 def runTest(testCases, folder):
     
@@ -135,73 +144,42 @@ def runTest(testCases, folder):
         for file in fnmatch.filter(filenames, '*.java'):
             
             if testCases.get(file) is not None:
+
                 try:
                     print 'processing: ', file, ' == ', root.split('/')[-1]
+
                     if testCases[file] is not "":
                         insert_test_cases(root, file, testCases[file])
                         run_save(root, file.rstrip('.java') + 'tmp.java')
                     else:
                         run_save(root, file)
+
                     print 'process done!', file, ' == ', root.split('/')[-1]
                 except:
-                    print sys.exc_info()[0]
-                    with open(root+'/errors.txt', 'w') as err:
-                        err.write(str(sys.exc_info()[0]))
+                    print 'complete with errors'
 
 
 if __name__ == "__main__":
 
-    testCases = {'ArrayUtilities.java': '''
-                    int[] arr = {8, 35, 23, 53, 1, 3, 100, 432, 10, 0};
-                    int[] sorted = {0, 1, 3, 8, 35, 47, 54, 57, 89, 90};
-                    System.out.println("boolean linearSearch(int[] array, int target)");
-                    System.out.println("TRUE");
-                    System.out.println(linearSearch(arr, 0));
-                    System.out.println(linearSearch(arr, 432));
-                    System.out.println(linearSearch(arr, 53));
-                    System.out.println("FALSE");  
-                    System.out.println(linearSearch(arr, 2));
-                    System.out.println(linearSearch(arr, 500));
-                    System.out.println(linearSearch(arr, -1));
-
-                    System.out.println("boolean binarySearch(int[] array, int target)");
-                    System.out.println("TRUE");
-                    System.out.println(binarySearch(sorted, 0));
-                    System.out.println(binarySearch(sorted, 35));
-                    System.out.println(binarySearch(sorted, 90));
-                    System.out.println("FALSE");  
-                    System.out.println(binarySearch(sorted, 2));
-                    System.out.println(binarySearch(sorted, 500));
-                    System.out.println(binarySearch(sorted, -1));
-
-                    System.out.println("void sort(int[] array)");
-                    System.out.println("original array" + Arrays.toString(arr));
-                    sort(arr);
-                    System.out.println("sorted array" + Arrays.toString(arr));
-
-                    System.out.println("int[] copy(int[] array)");
-                    int [] copied = copy(arr);
-                    System.out.println("copied array" + Arrays.toString(copied));  
-
-
-
-                    System.out.println("int[] generateRandom(int 5)"); 
-                    System.out.println(Arrays.toString(generateRandom(5)));
-                    ''',
-                    'StopWatch.java':'''
-                    StopWatchtmp watch = new StopWatchtmp();
-                    watch.start();
-                    for (int i = 0; i < 100; i++)
-                    {
-                    System.out.println(i);
-                    }
-                    watch.stop();
-                    System.out.println("It took " + watch.getTimeNano() + " nanoseconds to complete that task");
+    testCases = {'Agent.java': '''
+                    Agent a = new Agent();
+                    System.out.println("getCityNow: " + a.getCityNow());
+                    System.out.println("getCityBorn: " + a.getCityBorn());
+                    System.out.println("getName: " + a.getName());
+                    System.out.println("getGender: " + a.getGender());
+                    System.out.println("getMajor: " + a.getMajor());
+                    System.out.println("getBirthday: " + a.getBirthday());
+                    a.sayHello();
+                    a.sayCityBorn();
+                    a.howOldAreYou();
+                    a.sayGender();
+                    a.sayCityNow();
+                    a.sayMajor();
                     '''
                     }
                 
-    folder = '/Users/Hycis/Documents/comp202/'
-  
+#     folder = '/Users/Hycis/Documents/COMP202A/'
+    folder = '/Users/Hycis/Documents/COMP202A/Assignment%204%20Download%20Dec%2013%2C%202013%201012%20AM-2/James Bodzay - Dec 8, 2013 247 PM - Assignment 4-James Bodzay'
     runTest(testCases, folder)
     
 
